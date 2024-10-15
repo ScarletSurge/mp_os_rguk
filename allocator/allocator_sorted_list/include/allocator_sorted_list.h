@@ -24,10 +24,10 @@ public:
     ~allocator_sorted_list() noexcept override;
 
     allocator_sorted_list(
-        allocator_sorted_list const &other);
+        allocator_sorted_list const &other) = delete;
 
     allocator_sorted_list &operator=(
-        allocator_sorted_list const &other);
+        allocator_sorted_list const &other) = delete;
 
     allocator_sorted_list(
         allocator_sorted_list &&other) noexcept;
@@ -80,6 +80,8 @@ private:
     static size_t constexpr available_block_metadata_size();
 
     static size_t constexpr ancillary_block_metadata_size();
+
+    std::mutex &obtain_synchronizer() const;
 
 };
 
