@@ -80,8 +80,12 @@ allocator_sorted_list::allocator_sorted_list(
     placement += sizeof(size_t);
     *reinterpret_cast<void **>(placement) = placement + sizeof(void *);
 
-    // placement + sizeof(void *)
-    *reinterpret_cast<void **>(*reinterpret_cast<void **>(placement)) = nullptr;
+    // BEFORE:
+    //*reinterpret_cast<void **>(*reinterpret_cast<void **>(placement)) = nullptr;
+
+    // AFTER:
+    obtain_next_available_block_address(obtain_first_available_block_address_byref()) = nullptr;
+
     *reinterpret_cast<size_t *>(reinterpret_cast<void **>(*reinterpret_cast<void **>(placement)) + 1) = space_size - available_block_metadata_size();
 
     // TODO: логи всё ещё очень хотят, чтобы их записали =)
@@ -91,13 +95,61 @@ allocator_sorted_list::allocator_sorted_list(
     size_t value_size,
     size_t values_count)
 {
-    throw not_implemented("[[nodiscard]] void *allocator_sorted_list::allocate(size_t, size_t)", "your code should be here...");
+    std::lock_guard<std::mutex> lock(obtain_synchronizer());
+
+    void *target_block = nullptr, *previous_to_target_block = nullptr;
+    size_t requested_size = value_size * values_count + ancillary_block_metadata_size();
+    size_t target_block_size;
+
+    {
+        void *current_block, *previous_block = nullptr;
+        current_block = obtain_first_available_block_address_byref();
+        allocator_with_fit_mode::fit_mode fit_mode = obtain_fit_mode();
+
+        while (current_block != nullptr)
+        {
+            size_t current_block_size = obtain_available_block_size(current_block);
+
+            if (current_block_size >= requested_size && (
+                fit_mode == allocator_with_fit_mode::fit_mode::first_fit ||
+                (fit_mode == allocator_with_fit_mode::fit_mode::the_best_fit &&
+                 (target_block == nullptr || current_block_size < target_block_size)) ||
+                (fit_mode == allocator_with_fit_mode::fit_mode::the_worst_fit &&
+                 (target_block == nullptr || current_block_size > target_block_size))))
+            {
+                target_block = current_block;
+                previous_to_target_block = previous_block;
+                target_block_size = current_block_size;
+
+                if (fit_mode == allocator_with_fit_mode::fit_mode::first_fit)
+                {
+                    break;
+                }
+            }
+
+            previous_block = current_block;
+            current_block = obtain_next_available_block_address(current_block);
+        }
+    }
+
+    if (target_block == nullptr)
+    {
+        // TODO: логи типо такие: напишите нас плиз =)
+
+        throw std::bad_alloc();
+    }
+
+    // TODO: You can do it! :)
+
+    return reinterpret_cast<void *>(reinterpret_cast<unsigned char *>(target_block) + ancillary_block_metadata_size());
 }
 
 void allocator_sorted_list::deallocate(
     void *at)
 {
-    throw not_implemented("void allocator_sorted_list::deallocate(void *)", "your code should be here...");
+    std::lock_guard<std::mutex> lock(obtain_synchronizer());
+
+    // TODO: You also can do it :)
 }
 
 inline void allocator_sorted_list::set_fit_mode(
@@ -138,10 +190,42 @@ size_t constexpr allocator_sorted_list::available_block_metadata_size()
 
 size_t constexpr allocator_sorted_list::ancillary_block_metadata_size()
 {
-    return sizeof(size_t) + sizeof(void *);
+    // return sizeof(size_t) + sizeof(void *);
+    return sizeof(block_size_t) + sizeof(void *);
 }
 
 std::mutex &allocator_sorted_list::obtain_synchronizer() const
 {
     return *reinterpret_cast<std::mutex *>(const_cast<unsigned char *>(reinterpret_cast<unsigned char const *>(_trusted_memory) + sizeof(allocator *) + sizeof(logger *)));
+}
+
+void *&allocator_sorted_list::obtain_first_available_block_address_byref() const
+{
+    return *reinterpret_cast<void **>(reinterpret_cast<unsigned char *>(_trusted_memory) + sizeof(allocator *) + sizeof(logger *) + sizeof(std::mutex) + sizeof(allocator_with_fit_mode::fit_mode) + sizeof(size_t));
+}
+
+void **allocator_sorted_list::obtain_first_available_block_address_byptr() const
+{
+    return reinterpret_cast<void **>(reinterpret_cast<unsigned char *>(_trusted_memory) + sizeof(allocator *) + sizeof(logger *) + sizeof(std::mutex) + sizeof(allocator_with_fit_mode::fit_mode) + sizeof(size_t));
+}
+
+void *&allocator_sorted_list::obtain_next_available_block_address(
+    void *current_available_block_address)
+{
+    return *reinterpret_cast<void **>(current_available_block_address);
+}
+
+size_t &allocator_sorted_list::obtain_available_block_size(
+    void *current_available_block_address)
+{
+    return *reinterpret_cast<size_t *>(&obtain_next_available_block_address(current_available_block_address) + 1);
+
+    // return *reinterpret_cast<size_t *>(reinterpret_cast<void **>(current_available_block_address) + 1);
+
+    // return *reinterpret_cast<size_t *>(reinterpret_cast<unsigned char *>(current_available_block_address) + sizeof(void *));
+}
+
+allocator_with_fit_mode::fit_mode &allocator_sorted_list::obtain_fit_mode() const
+{
+    return *reinterpret_cast<allocator_with_fit_mode::fit_mode *>(reinterpret_cast<unsigned char *>(_trusted_memory) + sizeof(allocator *) + sizeof(logger *) + sizeof(std::mutex));
 }

@@ -83,6 +83,18 @@ private:
 
     std::mutex &obtain_synchronizer() const;
 
+    void *&obtain_first_available_block_address_byref() const;
+
+    void **obtain_first_available_block_address_byptr() const;
+
+    static void *&obtain_next_available_block_address(
+        void *current_available_block_address);
+
+    static size_t &obtain_available_block_size(
+        void *current_available_block_address);
+
+    allocator_with_fit_mode::fit_mode &obtain_fit_mode() const;
+
 };
 
 #endif //MATH_PRACTICE_AND_OPERATING_SYSTEMS_ALLOCATOR_ALLOCATOR_SORTED_LIST_H
