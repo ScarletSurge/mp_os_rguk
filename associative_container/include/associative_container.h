@@ -51,10 +51,6 @@ public:
     
     virtual void insert(
         tkey const &key,
-        tvalue const &value) = 0;
-    
-    virtual void insert(
-        tkey const &key,
         tvalue &&value) = 0;
     
     virtual tvalue const &obtain(
