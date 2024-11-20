@@ -504,6 +504,9 @@ protected:
             node *at,
             tkey const &key,
             tvalue &&value) const noexcept;
+
+        virtual void balance(
+            std::stack<typename binary_search_tree<tkey, tvalue>::node **> &path);
     
     private:
         
@@ -514,10 +517,6 @@ protected:
     class obtaining_template_method:
         public template_method_basics
     {
-    
-    private:
-        
-        binary_search_tree<tkey, tvalue> *_tree;
     
     public:
         
@@ -539,10 +538,6 @@ protected:
         public template_method_basics,
         public allocator_guardant
     {
-    
-    private:
-        
-        binary_search_tree<tkey, tvalue> *_tree;
     
     public:
         
@@ -616,10 +611,6 @@ public:
     ~binary_search_tree() override;
 
 public:
-    
-    void insert(
-        tkey const &key,
-        tvalue const &value) final;
     
     void insert(
         tkey const &key,
@@ -1583,7 +1574,7 @@ void binary_search_tree<tkey, tvalue>::insertion_template_method::insert(
 
     auto **top = path_to_node_with_key->top();
 
-    if (top != nullptr)
+    if (*top != nullptr)
     {
         switch (_insertion_strategy)
         {
@@ -1600,7 +1591,7 @@ void binary_search_tree<tkey, tvalue>::insertion_template_method::insert(
 
     allocator::construct(*top = reinterpret_cast<typename binary_search_tree<tkey, tvalue>::node *>(allocate_with_guard(obtain_node_size())), key, std::forward<tvalue &&>(value));
 
-    // TODO: launch balance operation
+    balance();
 }
 
 template<
@@ -1629,6 +1620,15 @@ inline void binary_search_tree<tkey, tvalue>::insertion_template_method::constru
     tvalue &&value) const noexcept
 {
     allocator::construct(at, key, std::forward<tvalue &&>(value));
+}
+
+template<
+    typename tkey,
+    typename tvalue>
+void binary_search_tree<tkey, tvalue>::insertion_template_method::balance(
+    std::stack<typename binary_search_tree<tkey, tvalue>::node **> &path)
+{
+    this->debug_with_guard("пук среньк, я не буду делать балансировку))0)0");
 }
 
 template<
