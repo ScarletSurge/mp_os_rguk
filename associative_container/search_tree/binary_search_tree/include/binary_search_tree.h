@@ -550,7 +550,7 @@ protected:
         
     public:
         
-        tvalue dispose(
+        virtual tvalue dispose(
             tkey const &key);
         
         void set_disposal_strategy(
@@ -1872,19 +1872,9 @@ template<
     typename tvalue>
 void binary_search_tree<tkey, tvalue>::insert(
     tkey const &key,
-    tvalue const &value)
-{
-    _insertion_template->insert(key, value);
-}
-
-template<
-    typename tkey,
-    typename tvalue>
-void binary_search_tree<tkey, tvalue>::insert(
-    tkey const &key,
     tvalue &&value)
 {
-    _insertion_template->insert(key, std::move(value));
+    _insertion_template->insert(key, std::forward<tvalue>(value));
 }
 
 template<
