@@ -66,6 +66,19 @@ public:
             tvalue const &value);
         
     };
+
+    friend class prefix_iterator;
+    friend class prefix_const_iterator;
+    friend class prefix_reverse_iterator;
+    friend class prefix_const_reverse_iterator;
+    friend class infix_iterator;
+    friend class infix_const_iterator;
+    friend class infix_reverse_iterator;
+    friend class infix_const_reverse_iterator;
+    friend class postfix_iterator;
+    friend class postfix_const_iterator;
+    friend class postfix_reverse_iterator;
+    friend class postfix_const_reverse_iterator;
     
     class prefix_iterator final
     {
@@ -269,10 +282,17 @@ public:
     
     class postfix_iterator final
     {
+
+    private:
+
+        binary_search_tree<tkey, tvalue> *_tree;
+
+        std::stack<typename binary_search_tree<tkey, tvalue>::node *> _path;
     
     public:
         
         explicit postfix_iterator(
+            binary_search_tree<tkey, tvalue> *tree,
             typename binary_search_tree<tkey, tvalue>::node *subtree_root);
     
     public:
@@ -289,7 +309,7 @@ public:
             int not_used);
         
         iterator_data *operator*() const;
-        
+
     };
     
     class postfix_const_iterator final
@@ -641,7 +661,16 @@ public:
         typename binary_search_tree<tkey, tvalue>::disposal_of_nonexistent_key_attempt_strategy disposal_strategy) noexcept;
 
 public:
-    
+
+    // SFINAE
+    // IUnknown - COM
+    // std::range
+    // duck typing
+    // for (auto it = collection.begin(); it != collection.end(); ++it)
+    // {
+    //     std::cout << *it << ' ';
+    // }
+
     // region iterators requests definition
     
     prefix_iterator begin_prefix() const noexcept;
@@ -725,6 +754,24 @@ protected:
         bool validate = true) const;
     
     // endregion subtree rotations definition
+
+    // region puksrenjk
+
+private:
+
+    virtual size_t iterator_data_size() const
+    {
+        return sizeof(iterator_data);
+    }
+
+    virtual void post_initialize(
+        typename binary_search_tree<tkey, tvalue>::node const *from,
+        typename binary_search_tree<tkey, tvalue>::iterator_data *to)
+    {
+
+    }
+
+    // endregion puksrenjk
     
 };
 
@@ -1220,9 +1267,16 @@ template<
     typename tkey,
     typename tvalue>
 binary_search_tree<tkey, tvalue>::postfix_iterator::postfix_iterator(
+    binary_search_tree<tkey, tvalue> *tree,
     typename binary_search_tree<tkey, tvalue>::node *subtree_root)
 {
-    throw not_implemented("template<typename tkey, typename tvalue> binary_search_tree<tkey, tvalue>::postfix_iterator::postfix_iterator(typename binary_search_tree<tkey, tvalue>::node *)", "your code should be here...");
+    while (subtree_root != nullptr)
+    {
+        _path.push(subtree_root);
+        subtree_root = subtree_root->left_subtree != nullptr
+            ? subtree_root->left_subtree
+            : subtree_root->right_subtree;
+    }
 }
 
 template<
@@ -1257,7 +1311,9 @@ template<
 typename binary_search_tree<tkey, tvalue>::postfix_iterator const binary_search_tree<tkey, tvalue>::postfix_iterator::operator++(
     int not_used)
 {
-    throw not_implemented("template<typename tkey, typename tvalue> typename binary_search_tree<tkey, tvalue>::postfix_iterator const binary_search_tree<tkey, tvalue>::postfix_iterator::operator++(int)", "your code should be here...");
+    auto result = *this;
+    ++*this;
+    return result;
 }
 
 template<
