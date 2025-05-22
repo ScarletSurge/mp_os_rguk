@@ -32,7 +32,7 @@ public:
         T *at);
 
 public:
-    
+
     [[nodiscard]] virtual void *allocate(
         size_t value_size,
         size_t values_count) = 0;

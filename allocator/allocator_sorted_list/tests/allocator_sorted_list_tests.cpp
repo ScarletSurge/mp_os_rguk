@@ -53,10 +53,18 @@ TEST(allocatorSortedListPositiveTests, test1)
 
 TEST(allocatorSortedListPositiveTests, test2)
 {
-    
-    //TODO: logger
-    
-    allocator *alloc = new allocator_sorted_list(3000, nullptr, nullptr,
+    logger_builder *lb = new client_logger_builder();
+    logger *log = lb
+        ->add_console_stream(logger::severity::trace)
+        ->add_console_stream(logger::severity::debug)
+        ->add_console_stream(logger::severity::information)
+        ->add_console_stream(logger::severity::warning)
+        ->add_console_stream(logger::severity::error)
+        ->add_console_stream(logger::severity::critical)
+        ->build();
+    delete lb;
+
+    allocator *alloc = new allocator_sorted_list(3000, nullptr, log,
         allocator_with_fit_mode::fit_mode::the_worst_fit);
     
     auto first_block = reinterpret_cast<int *>(alloc->allocate(sizeof(int), 250));
@@ -74,6 +82,7 @@ TEST(allocatorSortedListPositiveTests, test2)
     //TODO: проверка
     
     delete alloc;
+    delete log;
 }
 
 TEST(allocatorSortedListPositiveTests, test3)
@@ -262,11 +271,90 @@ TEST(allocatorSortedListNegativeTests, test1)
     delete logger;
 }
 
+class tm_basics
+{
+
+public:
+
+    void execute() // skeleton
+    {
+        step1();
+        step2();
+        step3();
+    }
+
+private:
+
+    void step1()
+    {
+        std::cout << "Fixed step execution..." << std::endl;
+    }
+
+protected:
+
+    virtual void step2()
+    {
+        std::cout << "Variadic step execution..." << std::endl;
+    }
+
+    virtual void step3() = 0;
+
+public:
+
+    virtual ~tm_basics() = default;
+
+};
+
+class tm_concrete1 final:
+    public tm_basics
+{
+
+private:
+
+    void step3() override
+    {
+        std::cout << "Overriden version of step3() method execution...";
+    }
+
+};
+
+class tm_concrete2 final:
+    public tm_basics
+{
+
+private:
+
+    void step2() override
+    {
+        std::cout << "Overriden variadic step execution..." << std::endl;
+    }
+
+private:
+
+    void step3() override
+    {
+        std::cout << "нет нет нет... да да да (с) Вася s1mple" << std::endl;
+    }
+
+};
+
 int main(
     int argc,
     char **argv)
 {
-    testing::InitGoogleTest(&argc, argv);
-    
-    return RUN_ALL_TESTS();
+    //testing::InitGoogleTest(&argc, argv);
+
+    printf("Здравствуте o_O\n");
+
+    tm_basics *template_method;
+
+    // region пук среньк
+    template_method = new tm_concrete2();
+// endregion пук среньк
+
+    template_method->execute();
+
+    delete template_method;
+
+    return 0;//RUN_ALL_TESTS();
 }

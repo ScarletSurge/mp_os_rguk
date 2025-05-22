@@ -164,6 +164,22 @@ TEST(positive_tests, test7)
     delete logger;
 }
 
+class A
+{
+private:
+    int _a;
+
+    class B
+    {
+    public:
+        B()
+        {
+            _a
+        }
+    };
+
+};
+
 int main(
     int argc,
     char **argv)

@@ -93,7 +93,14 @@ bool infix_iterator_test(
 {
     auto end_infix = tree.cend_infix();
     auto it = tree.cbegin_infix();
-    
+
+    for (auto it = expected_result.begin();
+              it != expected_result.end();
+              ++it)
+    {
+
+    }
+
     for (auto const &item: expected_result)
     {
         if ((*it)->depth != item.depth || (*it)->key != item.key || (*it)->value != item.value)

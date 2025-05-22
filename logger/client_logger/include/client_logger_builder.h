@@ -2,10 +2,16 @@
 #define MATH_PRACTICE_AND_OPERATING_SYSTEMS_CLIENT_LOGGER_BUILDER_H
 
 #include <logger_builder.h>
+#include <map>
+#include <filesystem>
 
 class client_logger_builder final:
     public logger_builder
 {
+private:
+
+    std::map<std::string, unsigned char> files;
+    std::string _output_format;
 
 public:
 
@@ -41,6 +47,12 @@ public:
     logger_builder *clear() override;
 
     [[nodiscard]] logger *build() const override;
+
+private:
+    void copy(client_logger_builder const &other);
+    void move(client_logger_builder &&other);
+
+    inline std::string const get_absolute_path(std::string const &file_path);
 
 };
 
